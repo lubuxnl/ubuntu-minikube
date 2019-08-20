@@ -11,15 +11,18 @@ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(
 add-apt-repository "deb https://apt.kubernetes.io/ kubernetes-xenial main"
 add-apt-repository -y ppa:rmescandon/yq
 apt-get update
-apt-get install -y docker-ce docker-ce-cli containerd.io socat kubectl yq pkg-config bash-completion xauth xdg-utils firefox
+apt-get install -y docker-ce docker-ce-cli containerd.io socat kubectl yq httpie siege awscli pkg-config bash-completion xauth xdg-utils firefox
 usermod -a -G docker vagrant
 su - vagrant -c "mkdir -p ~/.config && xdg-settings set default-web-browser firefox.desktop"
 test $(grep kubectl ~vagrant/.bashrc | wc -l) -eq 0 && echo -e "\n# Enable kubectl shell autocompletion\nsource <(kubectl completion bash)" >> ~vagrant/.bashrc
 
-echo Install Minikube, stern, kubectx...
-rm -rf /usr/local/bin/minikube /usr/local/bin/stern ~vagrant/.kubectx
+echo Install Minikube, stern, kn, kamel, kubectx...
+rm -rf /usr/local/bin/minikube /usr/local/bin/stern /usr/local/bin/kn /tmp/camel-k-client.tar.gz /opt/kamel ~vagrant/.kubectx
 curl -fsSL -o /usr/local/bin/minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x /usr/local/bin/minikube
 curl -fsSL -o /usr/local/bin/stern https://github.com/wercker/stern/releases/download/1.11.0/stern_linux_amd64 && chmod +x /usr/local/bin/stern
+curl -fsSL -o /usr/local/bin/kn https://storage.googleapis.com/knative-nightly/client/latest/kn-linux-amd64 && chmod +x /usr/local/bin/kn
+curl -fsSL -o /tmp/camel-k-client.tar.gz https://github.com/apache/camel-k/releases/download/1.0.0-M1/camel-k-client-1.0.0-M1-linux-64bit.tar.gz
+mkdir -p /opt/kamel && tar xzf /tmp/camel-k-client.tar.gz -C /opt/kamel && ln -sf /opt/kamel/kamel /usr/local/bin/kamel
 su - vagrant -c "git clone https://github.com/ahmetb/kubectx.git ~/.kubectx"
 ln -sf ~vagrant/.kubectx/kubectx /usr/local/bin/kubectx
 ln -sf ~vagrant/.kubectx/kubens /usr/local/bin/kubens
@@ -27,6 +30,8 @@ COMPDIR=$(pkg-config --variable=completionsdir bash-completion)
 ln -sf ~vagrant/.kubectx/completion/kubens.bash $COMPDIR/kubens
 ln -sf ~vagrant/.kubectx/completion/kubectx.bash $COMPDIR/kubectx
 echo '{ "insecure-registries" : [ "10.96.0.0/12" ] }' > /etc/docker/daemon.json
+test $(grep "kn completion" ~vagrant/.bashrc | wc -l) -eq 0 && echo -e "\n# Enable kn shell autocompletion\nsource <(kn completion)" >> ~vagrant/.bashrc
+test $(grep "kamel completion" ~vagrant/.bashrc | wc -l) -eq 0 && echo -e "\n# Enable kamel shell autocompletion\nsource <(kamel completion bash)" >> ~vagrant/.bashrc
 
 echo Cleanup...
 apt-get autoremove -y
@@ -43,15 +48,15 @@ echo Done!
 SCRIPT
 
 Vagrant.configure(2) do |config|
-  config.vm.define "ubukube-basic"
+  config.vm.define "ubukube-knative"
   config.vm.box = "bento/ubuntu-18.04"
-  config.vm.hostname = "ubukube-basic"
+  config.vm.hostname = "ubukube-knative"
   config.vm.network "private_network", ip: "192.168.56.101"
   config.vm.synced_folder '.', disabled: true
   config.vm.synced_folder 'work', '/home/vagrant/work', type: :virtualbox
 
   config.vm.provider :virtualbox do |vb|
-    vb.name = "ubukube-basic"
+    vb.name = "ubukube-knative"
     vb.gui = false
     vb.cpus = 4
     vb.memory = 8192

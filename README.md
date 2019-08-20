@@ -4,6 +4,8 @@ Using [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtual
 
 In order to be able to run `minikube dashboard` to show the Kubernetes dashboard of the cluster in a browser on the virtual machine the `Vagrantfile` also provisions the [Firefox](https://www.mozilla.org/firefox) browser and the required X Window packages. To actually show the browser a X server on the host system is required. This can be easily accomplished by using [MobaXterm](https://mobaxterm.mobatek.net/) as the SSH client to login to the virtual machine.
 
+This branch of the repository is specifically aimed at creating a starting point to perform the [Red Hat Knative tutorial](https://redhat-developer-demos.github.io/knative-tutorial/knative-tutorial/0.7.x/index.html). The `Vagrantfile` provisions all the required tools for this tutorial, so after starting the box one can start right away with the [tutorial](https://redhat-developer-demos.github.io/knative-tutorial/knative-tutorial-basics/0.7.x/01-setup.html#download-tutorial-sources).
+
 To use this VM perform the following steps (tested on Windows 10 Pro):
 
 1. When necessary install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/).
